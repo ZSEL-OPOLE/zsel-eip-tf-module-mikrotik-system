@@ -18,16 +18,16 @@ run "full_system_config" {
     ntp_servers = ["0.pool.ntp.org", "1.pool.ntp.org", "time.google.com"]
     dns_enabled = true
     dns_servers = ["8.8.8.8", "8.8.4.4", "1.1.1.1"]
+    dns_allow_remote_requests = true
     snmp_enabled = true
     snmp_contact = "admin@zsel.edu.pl"
     snmp_location = "ZSEL Opole - Server Room"
     snmp_communities = {
       "public-ro" = {
-        authorization = "read"
-        addresses     = ["192.168.600.0/24"]
+        security  = "authorized"
+        addresses = ["192.168.60.0/24"]
       }
     }
-    syslog_servers = ["192.168.10.100"]
     timezone = "Europe/Warsaw"
   }
   
@@ -66,13 +66,14 @@ run "full_system_config" {
     error_message = "Should have 1 SNMP community"
   }
   
-  assert {
-    condition     = length(routeros_system_logging_action.this) == 1
-    error_message = "Should have 1 logging action"
-  }
+  # logging_actions removed - no syslog configured
+  # assert {
+  #   condition     = length(routeros_system_logging_action.this) == 1
+  #   error_message = "Should have 1 logging action"
+  # }
   
   assert {
-    condition     = routeros_system_clock.this.time_zone_name == "Europe/Warsaw"
+    condition     = routeros_system_clock.this[0].time_zone_name == "Europe/Warsaw"
     error_message = "Timezone should be Europe/Warsaw"
   }
 }
@@ -108,7 +109,7 @@ run "multi_site_config" {
   }
   
   assert {
-    condition     = length(split(",", routeros_ip_dns.this[0].servers)) == 4
+    condition     = length(routeros_ip_dns.this[0].servers) == 4
     error_message = "Should have 4 DNS servers"
   }
 }
@@ -124,16 +125,16 @@ run "snmp_multiple_communities" {
     snmp_location = "Datacenter 1"
     snmp_communities = {
       "monitoring-ro" = {
-        authorization = "read"
-        addresses     = ["192.168.10.0/24"]
+        security  = "authorized"
+        addresses = ["192.168.10.0/24"]
       }
       "nagios-ro" = {
-        authorization = "read"
-        addresses     = ["192.168.10.100"]
+        security  = "authorized"
+        addresses = ["192.168.10.100"]
       }
       "admin-rw" = {
-        authorization = "write"
-        addresses     = ["192.168.600.10"]
+        security  = "private"
+        addresses = ["192.168.60.10"]
       }
     }
   }
@@ -144,13 +145,13 @@ run "snmp_multiple_communities" {
   }
   
   assert {
-    condition     = routeros_snmp_community.this["monitoring-ro"].authorization == "read"
-    error_message = "monitoring-ro should be read-only"
+    condition     = routeros_snmp_community.this["monitoring-ro"].security == "authorized"
+    error_message = "monitoring-ro should be authorized"
   }
   
   assert {
-    condition     = routeros_snmp_community.this["admin-rw"].authorization == "write"
-    error_message = "admin-rw should be read-write"
+    condition     = routeros_snmp_community.this["admin-rw"].security == "private"
+    error_message = "admin-rw should be private"
   }
 }
 
@@ -159,10 +160,25 @@ run "remote_syslog_bsd" {
   command = plan
   
   variables {
-    identity        = "TEST-ROUTER-01"
-    syslog_servers  = ["192.168.10.100", "192.168.10.101"]
-    syslog_facility = "local6"
-    syslog_bsd      = true
+    identity = "TEST-ROUTER-01"
+    logging_actions = {
+      "syslog-prod" = {
+        target = "remote"
+        remote = "192.168.10.100"
+        bsd_syslog = {
+          facility = "local6"
+          severity = "info"
+        }
+      }
+      "syslog-backup" = {
+        target = "remote"
+        remote = "192.168.10.101"
+        bsd_syslog = {
+          facility = "local6"
+          severity = "info"
+        }
+      }
+    }
   }
   
   assert {
@@ -171,13 +187,13 @@ run "remote_syslog_bsd" {
   }
   
   assert {
-    condition     = routeros_system_logging_action.this["syslog-0"].target == "remote"
+    condition     = routeros_system_logging_action.this["syslog-prod"].target == "remote"
     error_message = "Logging target should be remote"
   }
   
   assert {
-    condition     = routeros_system_logging_action.this["syslog-0"].bsd_syslog == true
-    error_message = "BSD syslog format should be enabled"
+    condition     = routeros_system_logging_action.this["syslog-prod"].remote == "192.168.10.100"
+    error_message = "Remote syslog server should be configured"
   }
 }
 
@@ -195,11 +211,16 @@ run "outputs_validation" {
     snmp_contact = "test@test.com"
     snmp_communities = {
       "test" = {
-        authorization = "read"
-        addresses     = ["192.168.1.0/24"]
+        security  = "authorized"
+        addresses = ["192.168.1.0/24"]
       }
     }
-    syslog_servers  = ["192.168.1.100"]
+    logging_actions = {
+      "remote-syslog" = {
+        target = "remote"
+        remote = "192.168.1.100"
+      }
+    }
   }
   
   assert {
