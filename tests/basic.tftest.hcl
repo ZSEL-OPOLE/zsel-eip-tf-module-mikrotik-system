@@ -5,6 +5,9 @@
 # Expected: Resources should be created with default values
 # =============================================================================
 
+# Mock provider configuration for testing without real RouterOS device
+mock_provider "routeros" {}
+
 # Test 1: Identity resource should be created
 run "identity_created" {
   command = plan

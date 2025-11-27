@@ -5,6 +5,9 @@
 # Expected: All resources should work together without conflicts
 # =============================================================================
 
+# Mock provider configuration for testing without real RouterOS device
+mock_provider "routeros" {}
+
 # Test 1: Full system configuration (all features enabled)
 run "full_system_config" {
   command = plan

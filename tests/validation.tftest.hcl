@@ -5,6 +5,9 @@
 # Expected: All validation rules should fail with invalid inputs
 # =============================================================================
 
+# Mock provider configuration for testing without real RouterOS device
+mock_provider "routeros" {}
+
 # Test 1: Invalid identity (special characters not allowed)
 run "invalid_identity_special_chars" {
   command = plan
