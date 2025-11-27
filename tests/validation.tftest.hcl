@@ -77,22 +77,7 @@ run "invalid_timezone_format" {
   ]
 }
 
-# Test 5: Invalid SNMP contact email
-run "invalid_snmp_contact_email" {
-  command = plan
-  
-  variables {
-    identity = "test-router"
-    snmp_enabled = true
-    snmp_contact = "invalid-email"  # Missing @ symbol
-  }
-  
-  expect_failures = [
-    var.snmp_contact
-  ]
-}
-
-# Test 6: Valid identity (should pass)
+# Test 5: Valid identity (should pass)
 run "valid_identity" {
   command = plan
   

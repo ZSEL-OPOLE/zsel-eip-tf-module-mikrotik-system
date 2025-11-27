@@ -27,7 +27,6 @@ run "full_system_config" {
         addresses     = ["192.168.600.0/24"]
       }
     }
-    logging_enabled = true
     syslog_servers = ["192.168.10.100"]
     timezone = "Europe/Warsaw"
   }
@@ -161,7 +160,6 @@ run "remote_syslog_bsd" {
   
   variables {
     identity        = "TEST-ROUTER-01"
-    logging_enabled = true
     syslog_servers  = ["192.168.10.100", "192.168.10.101"]
     syslog_facility = "local6"
     syslog_bsd      = true
@@ -201,7 +199,6 @@ run "outputs_validation" {
         addresses     = ["192.168.1.0/24"]
       }
     }
-    logging_enabled = true
     syslog_servers  = ["192.168.1.100"]
   }
   
@@ -250,7 +247,6 @@ run "empty_optional_values" {
     ntp_enabled = false
     dns_enabled = false
     snmp_enabled = false
-    logging_enabled = false
   }
   
   assert {
@@ -273,3 +269,4 @@ run "empty_optional_values" {
     error_message = "Logging actions should not be created when disabled"
   }
 }
+

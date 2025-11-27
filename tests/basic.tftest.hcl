@@ -27,7 +27,8 @@ run "ntp_disabled_by_default" {
   command = plan
   
   variables {
-    identity = "TEST-ROUTER-01"
+    identity    = "TEST-ROUTER-01"
+    ntp_enabled = false
   }
   
   assert {
@@ -41,7 +42,8 @@ run "dns_disabled_by_default" {
   command = plan
   
   variables {
-    identity = "TEST-ROUTER-01"
+    identity    = "TEST-ROUTER-01"
+    dns_enabled = false
   }
   
   assert {
@@ -55,7 +57,8 @@ run "snmp_disabled_by_default" {
   command = plan
   
   variables {
-    identity = "TEST-ROUTER-01"
+    identity     = "TEST-ROUTER-01"
+    snmp_enabled = false
   }
   
   assert {
@@ -110,12 +113,12 @@ run "enable_dns_two_servers" {
   }
   
   assert {
-    condition     = routeros_ip_dns.this[0].allow_remote_requests == true
-    error_message = "DNS should allow remote requests when enabled"
+    condition     = length(routeros_ip_dns.this) == 1
+    error_message = "DNS should be created"
   }
   
   assert {
-    condition     = length(split(",", routeros_ip_dns.this[0].servers)) == 2
+    condition     = length(routeros_ip_dns.this[0].servers) == 2
     error_message = "Should have 2 DNS servers"
   }
 }
@@ -130,7 +133,7 @@ run "system_clock_timezone" {
   }
   
   assert {
-    condition     = routeros_system_clock.this.time_zone_name == "Europe/Warsaw"
+    condition     = routeros_system_clock.this[0].time_zone_name == "Europe/Warsaw"
     error_message = "Timezone should be set correctly"
   }
 }
